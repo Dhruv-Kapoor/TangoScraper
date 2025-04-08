@@ -1,5 +1,5 @@
 firebase.json
-last_fetched.txt
+last_fetched*.txt
 output.json
 test*.json
 node_modules
