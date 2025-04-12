@@ -2,7 +2,7 @@ name: Fetch
 
 on:
   schedule:
-    - cron: "50 15 * * *"
+    - cron: "10 16 * * *"
   workflow_dispatch:
 
 jobs:
