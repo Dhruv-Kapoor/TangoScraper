@@ -1,6 +1,8 @@
 name: Fetch
 
 on:
+  schedule:
+    - cron: "1 7 * * *"
   workflow_dispatch:
   push:
     branches:
@@ -28,15 +30,16 @@ jobs:
         id: install
         run: npm install
       
-      # - name: Fetch tango
-      #   if: steps.install.outcome == 'success'
-      #   env:
-      #     FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-      #   run: node fetch_tango.js
+      - name: Fetch tango
+        if: steps.install.outcome == 'success'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          TANGO_CHAT_WEBHOOK: ${{ secrets.TANGO_CHAT_WEBHOOK }}
+        run: node fetch_tango.js test
 
       - name: Fetch queens
         if: steps.install.outcome == 'success'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           QUEENS_CHAT_WEBHOOK: ${{ secrets.QUEENS_CHAT_WEBHOOK }}
-        run: node fetch_queens.js
+        run: node fetch_queens.js test

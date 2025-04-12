@@ -1,12 +1,16 @@
 // 30 12 * * * /home/dhruv/.nvm/versions/node/v18.16.0/bin/node /home/dhruv/Desktop/crons/fetch_tango.js
 console.log("Fetch tango running");
 
-const SECRETS = require('/home/dhruv/Desktop/crons/secrets.json');
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+const LAST_FETCHED_FILE = 'latest_tango.txt'
+const CHAT_WEBHOOK = process.env.TANGO_CHAT_WEBHOOK;
 
-const FIRESTORE_CREDS_PATH = SECRETS.FIRESTORE_CREDS_PATH;
-const OUTPUT_FILE = SECRETS.OUTPUT_FILE;
-const LAST_FETCHED_FILE = SECRETS.LAST_FETCHED_FILE;
-const CHAT_WEBHOOK = SECRETS.CHAT_WEBHOOK;
+var FIRESTORE_COLLECTION;
+if (process.argv[2] == "test") {
+  FIRESTORE_COLLECTION = 'test';
+} else {
+  FIRESTORE_COLLECTION = 'grids';
+}
 
 const MAX_RETRIES = 12;
 const RETRY_DELAY = 5*60*1000;
@@ -14,7 +18,7 @@ const RETRY_DELAY = 5*60*1000;
 async function scrapeTango() {
   console.log("Scraping");
   const puppeteer = require("puppeteer");
-  const fs = require("node:fs");
+  // const fs = require("node:fs");
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
@@ -33,13 +37,13 @@ async function scrapeTango() {
 
   await browser.close();
 
-  fs.writeFile(OUTPUT_FILE, JSON.stringify(data), (err) => {
-    if (err) {
-      console.error(err);
-    } else {
-      console.log("File written");
-    }
-  });
+  // fs.writeFile(OUTPUT_FILE, JSON.stringify(data), (err) => {
+  //   if (err) {
+  //     console.error(err);
+  //   } else {
+  //     console.log("File written");
+  //   }
+  // });
 
   console.log("Scraping complete");
   return data;
@@ -109,20 +113,14 @@ async function uploadToFirestore(grid) {
   const { initializeApp, cert } = require("firebase-admin/app");
   const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
-  const serviceAccount = require(FIRESTORE_CREDS_PATH);
-
   initializeApp({
     credential: cert(serviceAccount),
   });
 
   const db = getFirestore();
 
-  var docRef = db.collection("grids");
-  if (process.argv[2] == "test") {
-    docRef = docRef.doc("test");
-  } else {
-    docRef = docRef.doc();
-  }
+  var docRef = db.collection(FIRESTORE_COLLECTION);
+  docRef = docRef.doc();
 
   await docRef.set({
     date: FieldValue.serverTimestamp(),
