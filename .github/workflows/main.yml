@@ -2,9 +2,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "1 7 * * *"
-  push:
-    branches:
-      - pipeline
 
 jobs:
   fetch:
@@ -12,6 +9,11 @@ jobs:
       name: production
     runs-on: ubuntu-latest
     steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Setup Node
         id: setup
         uses: actions/setup-node@v4
