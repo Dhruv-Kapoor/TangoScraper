@@ -1,0 +1,51 @@
+name: Fetch 2
+
+on:
+  schedule:
+    - cron: "20 16 * * *"
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    environment:
+      name: production
+    runs-on: ubuntu-20.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        id: setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          
+      - name: Install dependencies
+        if: steps.setup.outcome == 'success'
+        id: install
+        run: npm install
+      
+      - name: Fetch tango
+        if: steps.install.outcome == 'success'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          TANGO_CHAT_WEBHOOK: ${{ secrets.TANGO_CHAT_WEBHOOK }}
+        run: node fetch_tango.js test
+
+      - name: Fetch queens
+        if: steps.install.outcome == 'success'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          QUEENS_CHAT_WEBHOOK: ${{ secrets.QUEENS_CHAT_WEBHOOK }}
+        run: node fetch_queens.js test
+      
+      - name: Commit
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "dhruvkapoor.200@gmail.com"
+          git remote set-url origin "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git add .
+          git commit -m "[Github-Actions] updated latest version" || echo "No changes to commit"
+          git push origin HEAD:${{ github.ref }}
