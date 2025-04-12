@@ -1,11 +1,10 @@
 // 30 12 * * * /home/dhruv/.nvm/versions/node/v18.16.0/bin/node /home/dhruv/Desktop/crons/fetch_queens.js
 console.log("Fetch queens running");
 
-const SECRETS = require('/home/dhruv/Desktop/crons/secrets.json');
-
-const FIRESTORE_CREDS_PATH = SECRETS.FIRESTORE_CREDS_PATH;
-const LAST_FETCHED_FILE = SECRETS.LAST_FETCHED_QUEENS_FILE;
-const CHAT_WEBHOOK = SECRETS.QUEENS_CHAT_WEBHOOK;
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+const LAST_FETCHED_FILE = 'latest_queens.txt'
+const CHAT_WEBHOOK = process.env.QUEENS_CHAT_WEBHOOK;
+const FIRESTORE_COLLECTION = 'test'
 
 const MAX_RETRIES = 12;
 const RETRY_DELAY = 5*60*1000;
@@ -36,13 +35,13 @@ async function scrapeQueens() {
 
   await browser.close();
 
-  fs.writeFile('test.json', JSON.stringify(data), (err) => {
-    if (err) {
-      console.error(err);
-    } else {
-      console.log("File written");
-    }
-  });
+  // fs.writeFile('test.json', JSON.stringify(data), (err) => {
+  //   if (err) {
+  //     console.error(err);
+  //   } else {
+  //     console.log("File written");
+  //   }
+  // });
 
   console.log("Scraping complete");
   return data;
@@ -91,15 +90,13 @@ async function uploadToFirestore(grid) {
   const { initializeApp, cert } = require("firebase-admin/app");
   const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
-  const serviceAccount = require(FIRESTORE_CREDS_PATH);
-
   initializeApp({
     credential: cert(serviceAccount),
   });
 
   const db = getFirestore();
 
-  var docRef = db.collection("grids");
+  var docRef = db.collection(FIRESTORE_COLLECTION);
   if (process.argv[2] == "test") {
     docRef = docRef.doc("test");
   } else {
