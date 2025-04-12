@@ -1,7 +1,9 @@
+name: Fetch
+
 on:
-  workflow_dispatch:
   schedule:
     - cron: "1 7 * * *"
+  workflow_dispatch:
 
 jobs:
   fetch:
