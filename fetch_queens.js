@@ -75,7 +75,6 @@ async function makeGrid(data) {
     var handler = new htmlparser.DefaultHandler(function (error, dom) {
       if (!error) {
         if (dom[0].name != "div") return;
-        console.log(dom)
         const index = parseInt(dom[0].attribs["data-cell-idx"]);
         const grid_i = Math.floor(index / size);
         const grid_j = index % size;
@@ -103,11 +102,7 @@ async function uploadToFirestore(grid) {
   const db = getFirestore();
 
   var docRef = db.collection(FIRESTORE_COLLECTION);
-  if (process.argv[2] == "test") {
-    docRef = docRef.doc("test");
-  } else {
-    docRef = docRef.doc();
-  }
+  docRef = docRef.doc();
 
   await docRef.set({
     date: FieldValue.serverTimestamp(),

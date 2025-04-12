@@ -2,11 +2,8 @@ name: Fetch
 
 on:
   schedule:
-    - cron: "1 7 * * *"
+    - cron: "45 3 * * *"
   workflow_dispatch:
-  push:
-    branches:
-      - pipeline
 
 jobs:
   fetch:
