@@ -4,9 +4,10 @@ console.log("Fetch tango running");
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 const LAST_FETCHED_FILE = 'latest_tango.txt'
 const CHAT_WEBHOOK = process.env.TANGO_CHAT_WEBHOOK;
+const IS_TEST_MODE = process.argv[2] == "test";
 
 var FIRESTORE_COLLECTION;
-if (process.argv[2] == "test") {
+if (IS_TEST_MODE) {
   FIRESTORE_COLLECTION = 'test';
 } else {
   FIRESTORE_COLLECTION = 'grids';
@@ -134,6 +135,10 @@ async function uploadToFirestore(grid) {
 
 async function notify(message) {
   console.log("Notifying", message);
+
+  if (IS_TEST_MODE) {
+    message = `[TEST] ${message}`
+  }
 
   var https = require("https");
   var options = {

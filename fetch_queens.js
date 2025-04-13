@@ -4,9 +4,10 @@ console.log("Fetch queens running");
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 const LAST_FETCHED_FILE = 'latest_queens.txt'
 const CHAT_WEBHOOK = process.env.QUEENS_CHAT_WEBHOOK;
+const IS_TEST_MODE = process.argv[2] == "test";
 
 var FIRESTORE_COLLECTION;
-if (process.argv[2] == "test") {
+if (IS_TEST_MODE) {
   FIRESTORE_COLLECTION = 'test';
 } else {
   FIRESTORE_COLLECTION = 'grids';
@@ -19,7 +20,7 @@ const PAGE_LINK = "https://www.linkedin.com/games/view/queens/desktop";
 async function scrapeQueens() {
   console.log("Scraping");
   const puppeteer = require("puppeteer");
-  const fs = require("node:fs");
+  // const fs = require("node:fs");
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
@@ -116,6 +117,10 @@ async function uploadToFirestore(grid) {
 
 async function notify(message) {
   console.log("Notifying", message);
+
+  if (IS_TEST_MODE) {
+    message = `[TEST] ${message}`
+  }
 
   var https = require("https");
   var options = {
