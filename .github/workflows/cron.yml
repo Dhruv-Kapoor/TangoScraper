@@ -32,14 +32,14 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           TANGO_CHAT_WEBHOOK: ${{ secrets.TANGO_CHAT_WEBHOOK }}
-        run: node fetch_tango.js test
+        run: node fetch_tango.js
 
       - name: Fetch queens
         if: steps.install.outcome == 'success'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           QUEENS_CHAT_WEBHOOK: ${{ secrets.QUEENS_CHAT_WEBHOOK }}
-        run: node fetch_queens.js test
+        run: node fetch_queens.js
       
       - name: Commit
         run: |
