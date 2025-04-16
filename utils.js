@@ -5,7 +5,13 @@ const https = require("https");
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 class ScrapeUtil {
-  constructor(config, scrapeFunction, makeGridFunction, testMode) {
+  constructor(
+    config,
+    scrapeFunction,
+    makeGridFunction,
+    testMode,
+    disableNotifications
+  ) {
     this.MAX_RETRIES = 12;
     this.RETRY_DELAY = 5 * 60 * 1000;
 
@@ -15,13 +21,14 @@ class ScrapeUtil {
     this.PAGE_LINK = config.PAGE_LINK;
     this.IS_TEST_MODE = testMode;
 
+    this.disableNotifications = disableNotifications;
     this.serviceAccount = JSON.parse(config.FIREBASE_SERVICE_ACCOUNT);
     this.scrape = scrapeFunction;
     this.makeGrid = makeGridFunction;
     if (testMode) {
       this.FIRESTORE_COLLECTION = "test";
-      // } else {
-      //   this.FIRESTORE_COLLECTION = 'grids';
+    } else {
+      this.FIRESTORE_COLLECTION = "grids";
     }
   }
 
@@ -48,10 +55,13 @@ class ScrapeUtil {
   }
 
   async notify(message) {
-    console.log("Notifying", message);
-
     if (this.IS_TEST_MODE) {
       message = `[TEST] ${message}`;
+    }
+    console.log("Notifying", message);
+
+    if (this.disableNotifications) {
+      return;
     }
 
     var options = {
@@ -145,4 +155,4 @@ class ScrapeUtil {
   }
 }
 
-module.exports = {ScrapeUtil};
+module.exports = { ScrapeUtil };

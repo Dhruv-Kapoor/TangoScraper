@@ -41,6 +41,13 @@ jobs:
           QUEENS_CHAT_WEBHOOK: ${{ secrets.QUEENS_CHAT_WEBHOOK }}
         run: node fetch_queens.js
       
+      - name: Fetch Zip
+        if: steps.install.outcome == 'success'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          QUEENS_CHAT_WEBHOOK: ${{ secrets.ZIP_CHAT_WEBHOOK }}
+        run: node fetch_zip.js
+      
       - name: Commit
         run: |
           git config --global user.name "GitHub Actions"
