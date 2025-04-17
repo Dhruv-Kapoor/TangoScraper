@@ -89,7 +89,7 @@ async function makeGrid(data) {
 const util = new ScrapeUtil(
   {
     CHAT_WEBHOOK: process.env.TANGO_CHAT_WEBHOOK,
-    GRID_TYPE: 2,
+    GRID_TYPE: 1,
     LAST_FETCHED_FILE: "latest_tango.txt",
     FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT,
     PAGE_LINK: 'https://www.linkedin.com/games/view/tango/desktop'
