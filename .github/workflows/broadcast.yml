@@ -1,0 +1,33 @@
+name: Fetch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    environment:
+      name: production
+    runs-on: ubuntu-22.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        id: setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+      
+      - name: Install dependencies
+        if: steps.setup.outcome == 'success'
+        id: install
+        run: npm install
+      
+      - name: Run broadcast server
+        if: steps.install.outcome == 'success'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          PAT: ${{ secrets.PAT }}
+        run: node broadcast.js

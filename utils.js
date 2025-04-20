@@ -26,7 +26,7 @@ class ScrapeUtil {
     this.disableNotifications = disableNotifications;
     this.scrape = scrapeFunction;
     this.makeGrid = makeGridFunction;
-    this.label = label
+    this.label = label;
     if (testMode) {
       this.FIRESTORE_COLLECTION = "test";
     } else {
@@ -83,12 +83,6 @@ class ScrapeUtil {
     req.end();
   }
 
-  async getLastFetchedId() {
-    const fs = require("node:fs");
-    const res = fs.readFileSync(this.LAST_FETCHED_FILE, { encoding: "utf-8" });
-    return parseInt(res);
-  }
-
   async updateLastFetched(newId) {
     const fs = require("node:fs");
     fs.writeFileSync(this.LAST_FETCHED_FILE, `${newId}`, { encoding: "utf-8" });
@@ -141,32 +135,19 @@ class ScrapeUtil {
     throw `Update not found after ${this.MAX_RETRIES} tries, exiting`;
   }
 
-  async sendPushNotification(title, description) {
-    const message = {
-      topic: 'new_levels',
-      notification: {
-        title: title,
-        body: description
-      },
-    };
-  
-    try {
-      await firebaseAdmin.messaging().send(message);
-      console.log('Notification sent to all users');
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
-
   async run() {
     try {
-      const lastFetchedId = await this.getLastFetchedId();
+      const lastFetchedId = await getLastFetchedId(this.LAST_FETCHED_FILE);
       const newId = await this.checkForUpdates(lastFetchedId);
       const data = await this.scrape(this.PAGE_LINK);
       const grid = await this.makeGrid(data);
       await this.uploadToFirestore(grid, newId);
       await this.notify("Scraped and uploaded successfully");
-      await this.sendPushNotification(`Today's ${this.label} #${newId} is now available`, "Play Now!")
+      await sendPushNotification(
+        "new_levels",
+        `Today's ${this.label} #${newId} is now available`,
+        "Play Now!"
+      );
     } catch (e) {
       console.log(e);
       await this.notify(`Some error occured. Details:\n${e}`);
@@ -176,4 +157,27 @@ class ScrapeUtil {
   }
 }
 
-module.exports = { ScrapeUtil };
+async function sendPushNotification(topic, title, description) {
+  const message = {
+    topic: topic,
+    notification: {
+      title: title,
+      body: description,
+    },
+  };
+
+  try {
+    await firebaseAdmin.messaging().send(message);
+    console.log("Notification sent to all users");
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+async function getLastFetchedId(file) {
+  const fs = require("node:fs");
+  const res = fs.readFileSync(file, { encoding: "utf-8" });
+  return parseInt(res);
+}
+
+module.exports = { ScrapeUtil, delay, sendPushNotification, getLastFetchedId };
