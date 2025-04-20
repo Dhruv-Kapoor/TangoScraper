@@ -96,7 +96,8 @@ const util = new ScrapeUtil(
   },
   scrapeTango,
   makeGrid,
-  process.argv[2] == "test"
+  "Tango",
+  process.argv.includes('test'),
 );
 
 util.run();

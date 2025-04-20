@@ -1,3 +1,4 @@
+const firebaseAdmin = require("firebase-admin");
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const https = require("https");
@@ -9,6 +10,7 @@ class ScrapeUtil {
     config,
     scrapeFunction,
     makeGridFunction,
+    label,
     testMode,
     disableNotifications
   ) {
@@ -22,22 +24,23 @@ class ScrapeUtil {
     this.IS_TEST_MODE = testMode;
 
     this.disableNotifications = disableNotifications;
-    this.serviceAccount = JSON.parse(config.FIREBASE_SERVICE_ACCOUNT);
     this.scrape = scrapeFunction;
     this.makeGrid = makeGridFunction;
+    this.label = label
     if (testMode) {
       this.FIRESTORE_COLLECTION = "test";
     } else {
       this.FIRESTORE_COLLECTION = "grids";
     }
+
+    this.serviceAccount = JSON.parse(config.FIREBASE_SERVICE_ACCOUNT);
+    initializeApp({
+      credential: cert(this.serviceAccount),
+    });
   }
 
   async uploadToFirestore(grid, number) {
     console.log("Uploading to firestore");
-
-    initializeApp({
-      credential: cert(this.serviceAccount),
-    });
 
     const db = getFirestore();
 
@@ -138,6 +141,23 @@ class ScrapeUtil {
     throw `Update not found after ${this.MAX_RETRIES} tries, exiting`;
   }
 
+  async sendPushNotification(title, description) {
+    const message = {
+      topic: 'new_levels',
+      notification: {
+        title: title,
+        body: description
+      },
+    };
+  
+    try {
+      await firebaseAdmin.messaging().send(message);
+      console.log('Notification sent to all users');
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
   async run() {
     try {
       const lastFetchedId = await this.getLastFetchedId();
@@ -146,6 +166,7 @@ class ScrapeUtil {
       const grid = await this.makeGrid(data);
       await this.uploadToFirestore(grid, newId);
       await this.notify("Scraped and uploaded successfully");
+      await this.sendPushNotification(`New ${this.label} #${newId} is now available`, "Play Now!")
     } catch (e) {
       console.log(e);
       await this.notify(`Some error occured. Details:\n${e}`);

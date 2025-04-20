@@ -4,3 +4,4 @@ output.json
 test*.json
 node_modules
 secrets.json
+.env

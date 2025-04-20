@@ -99,7 +99,8 @@ const util = new ScrapeUtil(
   },
   scrapeZip,
   makeGrid,
-  process.argv[2] == "test"
+  "Zip",
+  process.argv.includes('test'),
 );
 
 util.run();

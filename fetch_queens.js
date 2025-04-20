@@ -81,7 +81,8 @@ const util = new ScrapeUtil(
   },
   scrapeQueens,
   makeGrid,
-  process.argv[2] == "test"
+  "Queens",
+  process.argv.includes('test'),
 );
 
 util.run();
