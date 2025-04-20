@@ -166,7 +166,7 @@ class ScrapeUtil {
       const grid = await this.makeGrid(data);
       await this.uploadToFirestore(grid, newId);
       await this.notify("Scraped and uploaded successfully");
-      await this.sendPushNotification(`New ${this.label} #${newId} is now available`, "Play Now!")
+      await this.sendPushNotification(`Today's ${this.label} #${newId} is now available`, "Play Now!")
     } catch (e) {
       console.log(e);
       await this.notify(`Some error occured. Details:\n${e}`);
