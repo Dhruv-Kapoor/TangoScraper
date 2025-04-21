@@ -29,14 +29,18 @@ async function handleParticipantDoc(doc) {
   if (
     doc.gridNumber == (await getLastFetchedId(LAST_FETCHED_FILES[doc.gridType]))
   ) {
-    const userDoc = await getFirestore().collection("users").doc(doc.id).get();
-    sendPushNotification(
-      "broadcast",
-      `${userDoc.data().name} completed ${LABELS[doc.gridType]} in ${
-        doc.firstAttempt
-      } seconds`,
-      ""
-    );
+    const userDoc = (
+      await getFirestore().collection("users").doc(doc.id).get()
+    ).data();
+    if (userDoc.preferences?.broadcast_enabled ?? true) {
+      sendPushNotification(
+        "broadcast",
+        `${userDoc.name} completed ${LABELS[doc.gridType]} in ${
+          doc.firstAttempt
+        } seconds`,
+        ""
+      );
+    }
   }
 }
 
@@ -82,7 +86,8 @@ async function run() {
   });
 
   const db = getFirestore();
-  db.collectionGroup("participants")
+  const stopListener = db
+    .collectionGroup("participants")
     .where("firstAttemptOn", ">", Timestamp.now())
     .onSnapshot((querySnapshot) => {
       querySnapshot.docChanges().forEach((change) => {
@@ -96,6 +101,7 @@ async function run() {
   await delay(WORKFLOW_DURATION);
   triggerWorkflow();
   await delay(TERMINATE_DELAY);
+  stopListener();
 }
 
 run();

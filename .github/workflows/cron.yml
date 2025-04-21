@@ -49,6 +49,7 @@ jobs:
         run: node fetch_zip.js
       
       - name: Commit
+        id: commit
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "dhruvkapoor.200@gmail.com"
@@ -56,3 +57,10 @@ jobs:
           git add .
           git commit -m "[Github-Actions] updated latest version" || echo "No changes to commit"
           git push origin HEAD:${{ github.ref }}
+        
+      - name: Restart broadcast server
+        if: steps.install.outcome == 'success'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          PAT: ${{ secrets.PAT }}
+        run: node restart_broadcast_server.js
