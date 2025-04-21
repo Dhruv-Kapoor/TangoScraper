@@ -4,7 +4,7 @@ const https = require("https");
 
 const { delay, sendPushNotification, getLastFetchedId } = require("./utils");
 
-const WORKFLOW_DURATION = 2 * 60 * 1000;
+const WORKFLOW_DURATION = 5.5 * 60 * 60 * 1000;
 const TERMINATE_DELAY = 1 * 60 * 1000;
 
 const config = {
