@@ -4,7 +4,7 @@ const https = require("https");
 
 const { delay, sendPushNotification, getLastFetchedId } = require("./utils");
 
-const WORKFLOW_DURATION = 5.5 * 60 * 60 * 1000;
+const WORKFLOW_DURATION = 2 * 60 * 1000;
 const TERMINATE_DELAY = 1 * 60 * 1000;
 
 const config = {
@@ -32,7 +32,7 @@ async function handleParticipantDoc(doc) {
     const userDoc = (
       await getFirestore().collection("users").doc(doc.id).get()
     ).data();
-    if (userDoc.preferences?.broadcast_enabled ?? true) {
+    if (!userDoc.preferences || userDoc.preferences.broadcast_enabled) {
       sendPushNotification(
         "broadcast",
         `${userDoc.name} completed ${LABELS[doc.gridType]} in ${
