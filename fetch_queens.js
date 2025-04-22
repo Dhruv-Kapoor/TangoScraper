@@ -3,18 +3,21 @@ console.log("Fetch queens running");
 
 const { ScrapeUtil } = require("./utils");
 
-async function scrapeQueens(pageLink) {
+async function scrapeQueens(pageLink, cookies) {
   console.log("Scraping");
   const puppeteer = require("puppeteer");
 
   const browser = await puppeteer.launch();
+  if (cookies) {
+    await browser.setCookie(...cookies);
+  }
   const page = await browser.newPage();
   await page.setJavaScriptEnabled(true);
   await page.goto(pageLink, {
-    waitUntil: "networkidle0",
+    waitUntil: "networkidle2",
   });
   await page.click("[id=launch-footer-start-button]", {
-    waitUntil: "networkidle0",
+    waitUntil: "networkidle2",
   });
 
   const data = await page.evaluate(() => {

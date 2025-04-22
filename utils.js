@@ -23,6 +23,9 @@ class ScrapeUtil {
     this.PAGE_LINK = config.PAGE_LINK;
     this.IS_TEST_MODE = testMode;
 
+    this.USE_COOKIES = process.env.USE_COOKIES == 'true';
+    this.COOKIES = JSON.parse(process.env.COOKIES);
+
     this.disableNotifications = disableNotifications;
     this.scrape = scrapeFunction;
     this.makeGrid = makeGridFunction;
@@ -58,29 +61,55 @@ class ScrapeUtil {
   }
 
   async notify(message) {
-    if (this.IS_TEST_MODE) {
-      message = `[TEST] ${message}`;
-    }
-    console.log("Notifying", message);
+    return new Promise((resolve, reject) => {
+      if (this.IS_TEST_MODE) {
+        message = `[TEST] ${message}`;
+      }
+      console.log("Notifying", message);
 
-    if (this.disableNotifications) {
-      return;
-    }
+      if (this.disableNotifications) {
+        resolve("Notifications disabled");
+        return;
+      }
 
-    var options = {
-      host: "chat.googleapis.com",
-      path: this.CHAT_WEBHOOK,
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=UTF-8" },
-    };
+      var options = {
+        host: "chat.googleapis.com",
+        path: this.CHAT_WEBHOOK,
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=UTF-8" },
+      };
 
-    const req = https.request(options, function (res) {});
-    req.write(
-      JSON.stringify({
-        text: message,
-      })
-    );
-    req.end();
+      const req = https.request(options, (res) => {
+        let data = "";
+
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        res.on("end", () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(data);
+          } else {
+            console.log(
+              `Request failed with status code ${res.statusCode}: ${data}`
+            );
+            resolve(null);
+          }
+        });
+      });
+
+      req.on("error", (error) => {
+        console.log(`Request failed with error: ${error}`);
+        resolve(null);
+      });
+
+      req.write(
+        JSON.stringify({
+          text: message,
+        })
+      );
+      req.end();
+    });
   }
 
   async updateLastFetched(newId) {
@@ -91,20 +120,28 @@ class ScrapeUtil {
   async fetchAvailableId() {
     const puppeteer = require("puppeteer");
 
+    let data = null;
     const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setJavaScriptEnabled(true);
-    await page.goto(this.PAGE_LINK, {
-      waitUntil: "networkidle0",
-    });
+    try {
+      const page = await browser.newPage();
+      if (this.USE_COOKIES) {
+        await browser.setCookie(...this.COOKIES);
+      }
+      await page.setJavaScriptEnabled(true);
+      await page.goto(this.PAGE_LINK, {
+        waitUntil: "networkidle2",
+      });
 
-    const data = await page.evaluate(() => {
-      const res = document
-        .querySelector("[class=launch-footer__score-text]")
-        .innerHTML.split(".")[1];
-      return parseInt(res);
-    });
-
+      data = await page.evaluate(() => {
+        const res = document
+          .querySelector("[class=launch-footer__score-text]")
+          .innerHTML.split(".")[1];
+        return parseInt(res);
+      });
+    } catch (e) {
+      await browser.close();
+      throw e;
+    }
     await browser.close();
 
     return data;
@@ -139,15 +176,17 @@ class ScrapeUtil {
     try {
       const lastFetchedId = await getLastFetchedId(this.LAST_FETCHED_FILE);
       const newId = await this.checkForUpdates(lastFetchedId);
-      const data = await this.scrape(this.PAGE_LINK);
+      const data = await this.scrape(this.PAGE_LINK, this.USE_COOKIES ? this.COOKIES : null);
       const grid = await this.makeGrid(data);
       await this.uploadToFirestore(grid, newId);
       await this.notify("Scraped and uploaded successfully");
-      await sendPushNotification(
-        "new_levels",
-        `Today's ${this.label} #${newId} is now available`,
-        "Play Now!"
-      );
+      if (!this.IS_TEST_MODE) {
+        await sendPushNotification(
+          "new_levels",
+          `Today's ${this.label} #${newId} is now available`,
+          "Play Now!"
+        );
+      }
     } catch (e) {
       console.log(e);
       await this.notify(`Some error occured. Details:\n${e}`);
