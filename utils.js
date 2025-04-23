@@ -23,7 +23,7 @@ class ScrapeUtil {
     this.PAGE_LINK = config.PAGE_LINK;
     this.IS_TEST_MODE = testMode;
 
-    this.USE_COOKIES = process.env.USE_COOKIES == 'true';
+    this.USE_COOKIES = process.env.USE_COOKIES == "true";
     this.COOKIES = JSON.parse(process.env.COOKIES);
 
     this.disableNotifications = disableNotifications;
@@ -176,7 +176,10 @@ class ScrapeUtil {
     try {
       const lastFetchedId = await getLastFetchedId(this.LAST_FETCHED_FILE);
       const newId = await this.checkForUpdates(lastFetchedId);
-      const data = await this.scrape(this.PAGE_LINK, this.USE_COOKIES ? this.COOKIES : null);
+      const data = await this.scrape(
+        this.PAGE_LINK,
+        this.USE_COOKIES ? this.COOKIES : null
+      );
       const grid = await this.makeGrid(data);
       await this.uploadToFirestore(grid, newId);
       await this.notify("Scraped and uploaded successfully");
@@ -207,9 +210,11 @@ async function sendPushNotification(topic, title, description) {
 
   try {
     await firebaseAdmin.messaging().send(message);
-    console.log("Notification sent to all users");
+    console.log(
+      `Sent following push notification on topic ${topic}.\nTitle: ${title}\nDescription: ${description}`
+    );
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error sending push notification:", error);
   }
 }
 

@@ -40,6 +40,8 @@ async function handleParticipantDoc(doc) {
         } seconds`,
         ""
       );
+    } else {
+      console.log(`broadcast is disabled for user: ${doc.id}`);
     }
   }
 }
