@@ -140,7 +140,7 @@ class ScrapeUtil {
       });
     } catch (e) {
       await browser.close();
-      throw e;
+      throw `Unable to find available id. Error ${e}`;
     }
     await browser.close();
 
@@ -152,17 +152,19 @@ class ScrapeUtil {
     var currentTry = 0;
     while (currentTry < this.MAX_RETRIES) {
       await this.notify("Checking for updates...");
-      const availableId = await this.fetchAvailableId();
-      if (availableId > lastFetched) {
-        await this.notify(`New level found with id: ${availableId}`);
-        await this.updateLastFetched(availableId);
-        return availableId;
-      } else {
-        await this.notify(
-          `No updates found, will retry after ${
+      try {
+        const availableId = await this.fetchAvailableId();
+        if (availableId > lastFetched) {
+          await this.notify(`New level found with id: ${availableId}`);
+          await this.updateLastFetched(availableId);
+          return availableId;
+        } else {
+          throw `No updates found`;
+        }
+      } catch (e) {
+        await this.notify(e + `\nWill retry after ${
             this.RETRY_DELAY / 60000
-          } minutes`
-        );
+          } minutes`);
         currentTry = currentTry + 1;
         if (currentTry < this.MAX_RETRIES) {
           await delay(this.RETRY_DELAY);
