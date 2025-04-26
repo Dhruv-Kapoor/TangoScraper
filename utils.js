@@ -162,9 +162,9 @@ class ScrapeUtil {
           throw `No updates found`;
         }
       } catch (e) {
-        await this.notify(e + `\nWill retry after ${
-            this.RETRY_DELAY / 60000
-          } minutes`);
+        await this.notify(
+          e + `\nWill retry after ${this.RETRY_DELAY / 60000} minutes`
+        );
         currentTry = currentTry + 1;
         if (currentTry < this.MAX_RETRIES) {
           await delay(this.RETRY_DELAY);
@@ -189,7 +189,10 @@ class ScrapeUtil {
         await sendPushNotification(
           "new_levels",
           `Today's ${this.label} #${newId} is now available`,
-          "Play Now!"
+          "Play Now!",
+          {
+            route: this.label.toLowerCase(),
+          }
         );
       }
     } catch (e) {
@@ -201,13 +204,14 @@ class ScrapeUtil {
   }
 }
 
-async function sendPushNotification(topic, title, description) {
+async function sendPushNotification(topic, title, description, data) {
   const message = {
     topic: topic,
     notification: {
       title: title,
       body: description,
     },
+    data: data,
   };
 
   try {

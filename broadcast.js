@@ -38,7 +38,10 @@ async function handleParticipantDoc(doc) {
         `${userDoc.name} completed ${LABELS[doc.gridType]} in ${
           doc.firstAttempt
         } seconds`,
-        ""
+        "",
+        {
+          route: LABELS[doc.gridType].toLowerCase(),
+        }
       );
     } else {
       console.log(`broadcast is disabled for user: ${doc.id}`);
