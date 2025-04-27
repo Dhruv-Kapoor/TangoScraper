@@ -94,13 +94,20 @@ async function run() {
   const stopListener = db
     .collectionGroup("participants")
     .where("firstAttemptOn", ">", Timestamp.now())
-    .onSnapshot((querySnapshot) => {
-      querySnapshot.docChanges().forEach((change) => {
-        if (change.type == "added") {
-          handleParticipantDoc(change.doc.data());
-        }
-      });
-    });
+    .onSnapshot(
+      (querySnapshot) => {
+        querySnapshot.docChanges().forEach((change) => {
+          if (change.type == "added") {
+            handleParticipantDoc(change.doc.data());
+          }
+        });
+      },
+      (error) => {
+        console.error("Listener error:", error);
+        triggerWorkflow();
+        throw error
+      }
+    );
 
   console.log("server running");
   await delay(WORKFLOW_DURATION);
