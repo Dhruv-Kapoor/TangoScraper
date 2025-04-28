@@ -192,6 +192,11 @@ class ScrapeUtil {
           "Play Now!",
           {
             route: this.label.toLowerCase(),
+          },
+          {
+            android: {
+              priority: "high",
+            },
           }
         );
       }
@@ -204,15 +209,24 @@ class ScrapeUtil {
   }
 }
 
-async function sendPushNotification(topic, title, description, data) {
+async function sendPushNotification(
+  topic,
+  title,
+  description,
+  data,
+  extra_data
+) {
   const message = {
-    topic: topic,
     notification: {
       title: title,
       body: description,
     },
     data: data,
+    ...(extra_data || {}),
   };
+  if (topic) {
+    message.topic = topic;
+  }
 
   try {
     await firebaseAdmin.messaging().send(message);
