@@ -12,6 +12,9 @@ async function scrapeTango(pageLink, cookies) {
     await browser.setCookie(...cookies);
   }
   const page = await browser.newPage();
+  await page.evaluateOnNewDocument(() => {
+    localStorage.setItem("play:tutorial:lotka", true);
+  });
   await page.setJavaScriptEnabled(true);
   await page.goto(pageLink, {
     waitUntil: "networkidle2",
@@ -98,12 +101,12 @@ const util = new ScrapeUtil(
     GRID_TYPE: 1,
     LAST_FETCHED_FILE: "latest_tango.txt",
     FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT,
-    PAGE_LINK: 'https://www.linkedin.com/games/view/tango/desktop'
+    PAGE_LINK: "https://www.linkedin.com/games/view/tango/desktop",
   },
   scrapeTango,
   makeGrid,
   "Tango",
-  process.argv.includes('test'),
+  process.argv.includes("test")
 );
 
 util.run();
