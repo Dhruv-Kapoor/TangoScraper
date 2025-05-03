@@ -41,6 +41,11 @@ async function handleParticipantDoc(doc) {
         "",
         {
           route: LABELS[doc.gridType].toLowerCase(),
+        },
+        {
+          android: {
+            priority: "high",
+          },
         }
       );
     } else {
@@ -105,7 +110,7 @@ async function run() {
       (error) => {
         console.error("Listener error:", error);
         triggerWorkflow();
-        throw error
+        throw error;
       }
     );
 
