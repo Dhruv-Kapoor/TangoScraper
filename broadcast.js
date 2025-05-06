@@ -32,7 +32,7 @@ async function handleParticipantDoc(doc) {
     const userDoc = (
       await getFirestore().collection("users").doc(doc.id).get()
     ).data();
-    if (!userDoc.preferences || userDoc.preferences.broadcast_enabled) {
+    if (!userDoc.preferences || userDoc.preferences.broadcast_enabled != false) {
       sendPushNotification(
         "broadcast",
         `${userDoc.name} completed ${LABELS[doc.gridType]} in ${
