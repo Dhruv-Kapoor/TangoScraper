@@ -16,12 +16,12 @@ const config = {
 };
 
 async function handleParticipantDoc(doc) {
-  LAST_FETCHED_FILES = {
+  const LAST_FETCHED_FILES = {
     1: "latest_tango.txt",
     2: "latest_queens.txt",
     3: "latest_zip.txt",
   };
-  LABELS = {
+  const LABELS = {
     1: "Tango",
     2: "Queens",
     3: "Zip",
@@ -32,7 +32,10 @@ async function handleParticipantDoc(doc) {
     const userDoc = (
       await getFirestore().collection("users").doc(doc.id).get()
     ).data();
-    if (!userDoc.preferences || userDoc.preferences.broadcast_enabled != false) {
+    if (
+      !userDoc.preferences ||
+      userDoc.preferences.broadcast_enabled != false
+    ) {
       sendPushNotification(
         "broadcast",
         `${userDoc.name} completed ${LABELS[doc.gridType]} in ${
@@ -52,6 +55,30 @@ async function handleParticipantDoc(doc) {
       console.log(`broadcast is disabled for user: ${doc.id}`);
     }
   }
+}
+
+async function handleInvite(doc) {
+  const INVITE_MESSAGES = {
+    1: "Tic Tac Toe",
+  };
+  sendPushNotification(
+    null,
+    `${doc.invitedByName} invited you to play ${
+      INVITE_MESSAGES[doc.inviteType]
+    }`,
+    "",
+    {
+      route: doc.route,
+      type: "invite",
+      inviteId: doc.id,
+    },
+    {
+      android: {
+        priority: "high",
+      },
+      token: doc.invitedToFcmToken,
+    }
+  );
 }
 
 function triggerWorkflow() {
@@ -96,7 +123,7 @@ async function run() {
   });
 
   const db = getFirestore();
-  const stopListener = db
+  const stopBroadcasrListener = db
     .collectionGroup("participants")
     .where("firstAttemptOn", ">", Timestamp.now())
     .onSnapshot(
@@ -114,11 +141,30 @@ async function run() {
       }
     );
 
+  const stopInvitesListener = db
+    .collection("invites")
+    .where("invitedOn", ">", Timestamp.now())
+    .onSnapshot(
+      (querySnapshot) => {
+        querySnapshot.docChanges().forEach((change) => {
+          if (change.type == "added") {
+            handleInvite(change.doc.data());
+          }
+        });
+      },
+      (error) => {
+        console.error("Invite Listener error:", error);
+        triggerWorkflow();
+        throw error;
+      }
+    );
+
   console.log("server running");
   await delay(WORKFLOW_DURATION);
   triggerWorkflow();
   await delay(TERMINATE_DELAY);
-  stopListener();
+  stopBroadcasrListener();
+  stopInvitesListener();
 }
 
 run();
