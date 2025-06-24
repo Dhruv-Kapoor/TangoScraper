@@ -55,6 +55,7 @@ async function makeGrid(data) {
     grid.push(ar);
   }
 
+  const customSymbolMap = {};
   for (let i = 0; i <= data.length; i++) {
     const ele = data[i];
     var handler = new htmlparser.DefaultHandler(function (error, dom) {
@@ -72,6 +73,15 @@ async function makeGrid(data) {
           grid[grid_i][grid_j].disabled = true;
         } else if (cellValue == "Moon") {
           grid[grid_i][grid_j].value = 3;
+          grid[grid_i][grid_j].disabled = true;
+        } else if (cellValue != "Empty") {
+          if (!(cellValue in customSymbolMap)) {
+            customSymbolMap[cellValue] = Object.keys(customSymbolMap).length + 2
+          }
+          if(Object.keys(customSymbolMap).length > 2) {
+            throw `Found more than 2 symbols ${JSON.stringify(customSymbolMap)}, ${cellValue}`
+          }
+          grid[grid_i][grid_j].value = customSymbolMap[cellValue];
           grid[grid_i][grid_j].disabled = true;
         }
 
