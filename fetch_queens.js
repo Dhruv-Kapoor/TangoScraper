@@ -62,7 +62,7 @@ async function makeGrid(data) {
         const grid_i = Math.floor(index / size);
         const grid_j = index % size;
         grid[grid_i][grid_j].color = parseInt(
-          dom[0].attribs.class.split("cell-color-")[1][0]
+          dom[0].attribs.class.split("cell-color-")[1].trim()
         );
       }
     });
