@@ -24,7 +24,7 @@ async function scrapeTango(pageLink, cookies) {
   });
 
   const data = await page.evaluate(() => {
-    let elements = Array.from(document.querySelectorAll("[id^=lotka-cell]"));
+    let elements = Array.from(document.querySelectorAll(".lotka-cell"));
     let cells = elements.map((element) => {
       return element.outerHTML;
     });
@@ -40,11 +40,11 @@ async function scrapeTango(pageLink, cookies) {
 async function makeGrid(data) {
   console.log("Transforming into grid");
   const htmlparser = require("htmlparser");
-
+  const size = Math.sqrt(data.length);
   const grid = [];
-  for (let i = 0; i < 6; ++i) {
+  for (let i = 0; i < size; ++i) {
     const ar = [];
-    for (let j = 0; j < 6; ++j) {
+    for (let j = 0; j < size; ++j) {
       ar.push({
         value: 1,
         disabled: false,
@@ -66,8 +66,8 @@ async function makeGrid(data) {
         const cellValue = innerTag.attribs["aria-label"];
 
         const index = parseInt(dom[0].attribs["data-cell-idx"]);
-        const grid_i = Math.floor(index / 6);
-        const grid_j = index % 6;
+        const grid_i = Math.floor(index / size);
+        const grid_j = index % size;
         if (cellValue == "Sun") {
           grid[grid_i][grid_j].value = 2;
           grid[grid_i][grid_j].disabled = true;
