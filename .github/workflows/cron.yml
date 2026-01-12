@@ -54,6 +54,15 @@ jobs:
           COOKIES: ${{ secrets.COOKIES }}
         run: node fetch_zip.js
       
+      - name: Fetch Sudoku
+        if: steps.install.outcome == 'success'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          SUDOKU_CHAT_WEBHOOK: ${{ secrets.SUDOKU_CHAT_WEBHOOK }}
+          USE_COOKIES: ${{ vars.USE_COOKIES }}
+          COOKIES: ${{ secrets.COOKIES }}
+        run: node fetch_mini_sudoku.js
+      
       - name: Commit
         id: commit
         run: |

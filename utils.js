@@ -12,7 +12,8 @@ class ScrapeUtil {
     makeGridFunction,
     label,
     testMode,
-    disableNotifications
+    disableNotifications,
+    skipIdCheck,
   ) {
     this.MAX_RETRIES = 12;
     this.RETRY_DELAY = 5 * 60 * 1000;
@@ -30,6 +31,7 @@ class ScrapeUtil {
     this.scrape = scrapeFunction;
     this.makeGrid = makeGridFunction;
     this.label = label;
+    this.skipIdCheck = skipIdCheck;
     if (testMode) {
       this.FIRESTORE_COLLECTION = "test";
     } else {
@@ -66,11 +68,6 @@ class ScrapeUtil {
         message = `[TEST] ${message}`;
       }
       console.log("Notifying", message);
-
-      if (this.disableNotifications) {
-        resolve("Notifications disabled");
-        return;
-      }
 
       var options = {
         host: "chat.googleapis.com",
@@ -177,7 +174,12 @@ class ScrapeUtil {
   async run() {
     try {
       const lastFetchedId = await getLastFetchedId(this.LAST_FETCHED_FILE);
-      const newId = await this.checkForUpdates(lastFetchedId);
+      let newId;
+      if (this.skipIdCheck) {
+        newId = lastFetchedId + 1;
+      } else {
+        newId = await this.checkForUpdates(lastFetchedId);
+      }
       const data = await this.scrape(
         this.PAGE_LINK,
         this.USE_COOKIES ? this.COOKIES : null
@@ -185,7 +187,7 @@ class ScrapeUtil {
       const grid = await this.makeGrid(data);
       await this.uploadToFirestore(grid, newId);
       await this.notify("Scraped and uploaded successfully");
-      if (!this.IS_TEST_MODE) {
+      if (!this.IS_TEST_MODE && !this.disableNotifications) {
         await sendPushNotification(
           "new_levels",
           `Today's ${this.label} #${newId} is now available`,
