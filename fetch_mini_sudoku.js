@@ -89,7 +89,7 @@ async function makeGrid(data) {
 
 const util = new ScrapeUtil(
 	{
-		CHAT_WEBHOOK: process.env.MINI_SUDOKU_CHAT_WEBHOOK,
+		CHAT_WEBHOOK: process.env.SUDOKU_CHAT_WEBHOOK,
 		GRID_TYPE: 4,
 		LAST_FETCHED_FILE: "latest_mini_sudoku.txt",
 		FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT,
